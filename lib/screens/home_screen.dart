@@ -14,19 +14,17 @@ class HomeScreen extends StatelessWidget {
       context: Get.context!,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(editingIndex == -1 ? 'Add ToDo' : 'Edit ToDo'),
+          title: Text(editingIndex == -1 ? 'Add To-Do' : 'Edit To-Do'),
           content: TextField(
             controller: editingController,
-            decoration: InputDecoration(hintText: 'ToDo'),
+            decoration: const InputDecoration(
+              hintText: 'To-Do',
+              border: OutlineInputBorder(),
+            ),
+            autofocus: true,
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Get.back(); // Close the dialog without adding ToDo
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
+            MaterialButton(
               onPressed: () {
                 if (editingIndex == -1) {
                   toDoController.addTodo(editingController.text);
@@ -38,7 +36,16 @@ class HomeScreen extends StatelessWidget {
                 editingController.text = ''; // Clear the text field
                 Get.back(); // Close the dialog
               },
-              child: Text('Add'),
+              color: Colors.deepPurple[400],
+              child: const Text('Add'),
+            ),
+            MaterialButton(
+              onPressed: () {
+                editingController.text = '';
+                Get.back(); // Close the dialog without adding ToDo
+              },
+              color: Colors.deepPurple[400],
+              child: const Text('Cancel'),
             ),
           ],
         );
@@ -51,7 +58,9 @@ class HomeScreen extends StatelessWidget {
     return GetBuilder<ToDoController>(builder: (toDoController) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('ToDo App'),
+          centerTitle: true,
+          title: const Text('To-Do'),
+          backgroundColor: Colors.deepPurple[600],
         ),
         body: Column(
           children: [
@@ -60,32 +69,47 @@ class HomeScreen extends StatelessWidget {
                 itemCount: toDoController.toDos.length,
                 itemBuilder: (context, index) {
                   var todo = toDoController.toDos[index];
-                  return ListTile(
-                    title: Text(
-                      todo.title,
-                      style: TextStyle(
-                        decoration: todo.isCompleted
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
-                        color: todo.isCompleted ? Colors.red : Colors.black,
-                      ),
-                    ),
-                    trailing: Checkbox(
-                      value: todo.isCompleted,
-                      onChanged: (value) {
-                        toDoController.toggleTodoStatus(index);
-                        toDoController.update();
-                      },
-                    ),
-                    onLongPress: () {
+                  return Dismissible(
+                    key: UniqueKey(), // Provide a unique key
+                    onDismissed: (direction) {
                       toDoController.removeTodo(index);
                       toDoController.update();
+                      Get.snackbar(
+                        'Task Removed',
+                        'Task Removed',
+                        duration: const Duration(seconds: 2),
+                      );
                     },
-                    onTap: () {
-                      editingIndex = index;
-                      editingController.text = todo.title;
-                      _showAddDialog(); // Open the dialog for editing
-                    },
+                    background: Container(
+                      color: Colors.red[400],
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 16.0),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        todo.title,
+                        style: TextStyle(
+                          decoration: todo.isCompleted
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: todo.isCompleted ? Colors.grey : Colors.white,
+                        ),
+                      ),
+                      leading: Checkbox(
+                        value: todo.isCompleted,
+                        onChanged: (value) {
+                          toDoController.toggleTodoStatus(index);
+                          toDoController.update();
+                        },
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {
+                        editingIndex = index;
+                        editingController.text = todo.title;
+                        _showAddDialog(); // Open the dialog for editing
+                      },
+                    ),
                   );
                 },
               ),
@@ -96,7 +120,7 @@ class HomeScreen extends StatelessWidget {
           onPressed: () {
             _showAddDialog(); // Open the dialog for adding new ToDo
           },
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
         ),
       );
     });
